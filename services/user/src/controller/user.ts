@@ -2,8 +2,11 @@ import User from "../models/user.js";
 import jwt from "jsonwebtoken";
 import TryCatch from "../utils/TryCatch.js";
 import type { AuthenticatedRequest } from "../middleware/isAuth.js";
+import getbuffer from "../middleware/datauri.js";
+import {v2 as cloudinary} from 'cloudinary'
+
 export const loginUser = TryCatch(async (req, res) => {
-  
+
 
   const { email, name, picture } = req.body;
 
@@ -46,3 +49,68 @@ export const getUserProfile = TryCatch(async (req, res) => {
 
   res.json(user);
 });
+
+
+export const updateUser = TryCatch(async (req: AuthenticatedRequest, res) => {
+
+  const { name, instagram, facebook, linkedin, bio } = req.body;
+  
+  const user = await User.findByIdAndUpdate(req.user?._id, {
+    name,
+    instagram,
+    facebook,
+    linkedin,
+    bio
+  },{new : true})
+
+  const token =  jwt.sign({user},process.env.JWT_SEC as string, {expiresIn:"5d"})
+
+
+    return res.json({
+      message: "Updated Successfully",
+      user,
+      token
+    })
+
+
+})
+
+export const uploadProfile = TryCatch(async(req:AuthenticatedRequest,res)=>{
+  // console.log(first)
+  const file = req.file
+
+  if(!file) {
+    res.status(400).json({
+      message:"No Image found"
+    })
+    return;
+  }
+
+  const filebuffer = getbuffer(file)
+
+  if(!filebuffer || !filebuffer.content) {
+
+    return res.status(400).json({
+      message:"Failed to generate buffer"
+    })
+  }
+
+  const cloud = await cloudinary.uploader.upload(filebuffer.content,{
+    folder:"blogs"
+  })
+
+  const user =  await User.findByIdAndUpdate(req.user?._id,{
+    image:cloud.secure_url
+  },{new:true})
+
+  const token = jwt.sign({user},process.env.JWT_SEC!,{
+    expiresIn:"5d"
+  })
+
+  res.json({
+    message:"User profile pic updated",
+    token,
+    user
+  })
+   
+})

@@ -23,12 +23,11 @@ export const isAuth = async (
     }
 
     const token = authHeader.split(" ")[1];
-
     const decodeValue = jwt.verify(
       token as string,
       process.env.JWT_SEC as string
     ) as JwtPayload;
-
+    
     if (!decodeValue || !decodeValue.user) {
       res.status(401).json({
         message: "Invalid token",
