@@ -1,12 +1,19 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { sql } from './utils/db.js';
-
+import { v2 as cloudinary } from 'cloudinary';
+import blogRoutes from './routes/blog.js'
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT!;
 
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME!,        
+  api_key: process.env.CLOUD_API_KEY!,        
+  api_secret: process.env.CLOUD_API_SECRET!,  
+});
+app.use("/api/v1",blogRoutes)
 async function initDB() {
     try {
         await sql`
@@ -23,7 +30,7 @@ async function initDB() {
     `;
 
         await sql`
-      CREATE TABLE IF NOT EXISTS comments (~
+      CREATE TABLE IF NOT EXISTS comments (
         id SERIAL PRIMARY KEY,
         comment VARCHAR(255) NOT NULL,
         userid VARCHAR(255) NOT NULL,
