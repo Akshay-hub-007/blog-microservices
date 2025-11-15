@@ -142,8 +142,4 @@ export const deleteBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
   res.json({
     message: "Blog Deleted"
   })
-
-
-
-
 })
