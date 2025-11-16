@@ -4,6 +4,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import { sql } from "../utils/db.js";
 import type { AuthenticatedRequest } from "../middleware/isAuth.js";
 import getbuffer from "../utils/datauri.js";
+import { invalidateCacheJob } from "../utils/rabbitmq.js";
 
 
 export const createBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
@@ -40,6 +41,7 @@ export const createBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
     RETURNING *
   `;
 
+   await invalidateCacheJob(["blogs*"])
   return res.json({
     message: "Blog Created",
     blog: result[0],
@@ -56,7 +58,6 @@ export const updateBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
 
   const blog = await sql`
    SELECT * FROM blogs WHERE id = ${id} `;
-
   if (!blog.length) {
 
     return res.status(404).json({
@@ -94,23 +95,23 @@ export const updateBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
       imageUrl = cloud.secure_url
     }
   }
+
   const updateblog = await sql`
   UPDATE blogs SET 
-  title = ${title | blog[0]?.title},
-  description = ${description | blog[0]?.description},
-  category = ${category | blog[0]?.category},
-  blogcontent = ${blogcontent | blog[0]?.blogcontent} ,
+  title = ${title || blog[0]?.title},
+  description = ${description || blog[0]?.description},
+  category = ${category || blog[0]?.category},
+  blogcontent = ${blogcontent || blog[0]?.blogcontent} ,
   image = ${imageUrl}
 
   WHERE id = ${id} 
 
   RETURNING *
   `;
-
+  invalidateCacheJob(["blogs:*",`blogid:${id}`])
   res.json({
     message: "Blog Updated",
-    blog: updateblog[0]
-
+    blog: updateblog
   })
 })
 
@@ -119,7 +120,7 @@ export const deleteBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
   const blog = await sql`
   SELECT * FROM blogs where id = ${id} 
   `
-
+  console.log(id)
   if (!blog.length) {
     return res.status(404).json({
       message: "Blog is not Found."
@@ -138,6 +139,7 @@ export const deleteBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
   await sql`DELETE FROM comments where blogid = ${id}`
   await sql`DELETE FROM blogs where id = ${id}`
 
+    invalidateCacheJob(["blogs:*",`blogid:${id}`])
 
   res.json({
     message: "Blog Deleted"

@@ -9,7 +9,7 @@ import { createClient } from "redis";
 export const getAllBlogs = TryCatch(async (req, res) => {
   const { searchQuery = "", category = "" } = req.query;
 
-  const cachekey = `blog:${searchQuery}:${category}`
+  const cachekey = `blogs:${searchQuery}:${category}`
   const cached = await redisClient.get(cachekey)
   if (cached) {
     console.log("Serving from redis cache")

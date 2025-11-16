@@ -49,7 +49,7 @@ export const invalidateCacheJob = async(cacheKeys:string[])=>{
             keys :cacheKeys
         }
 
-        await publishToQueue("cache-invalidation",cacheKeys)
+        await publishToQueue("cache-invalidation",message)
 
         console.log("Cache invalidation job published to RabbitMq")
         
