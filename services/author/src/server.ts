@@ -3,9 +3,13 @@ import dotenv from 'dotenv';
 import { sql } from './utils/db.js';
 import { v2 as cloudinary } from 'cloudinary';
 import blogRoutes from './routes/blog.js'
+import { connectRabbitMq } from './utils/rabbitmq.js';
 dotenv.config();
 
 const app = express();
+
+connectRabbitMq()
+
 const port = process.env.PORT!;
 
 cloudinary.config({
