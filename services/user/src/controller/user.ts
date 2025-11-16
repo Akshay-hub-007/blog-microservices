@@ -4,11 +4,26 @@ import TryCatch from "../utils/TryCatch.js";
 import type { AuthenticatedRequest } from "../middleware/isAuth.js";
 import getbuffer from "../middleware/datauri.js";
 import {v2 as cloudinary} from 'cloudinary'
+import { oauthclient } from "../utils/GoogleConfig.js";
+import axios from "axios";
 
 export const loginUser = TryCatch(async (req, res) => {
 
+  const { code } = req.body
+  
+  if(!code) {
+    res.status(400).json({
+      message:"Authroizatio code is required"
+    })
+  }
 
-  const { email, name, picture } = req.body;
+  const googleRes = await oauthclient.getToken(code)
+
+  oauthclient.setCredentials(googleRes.tokens)
+   
+  const userRes = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`)
+
+  const { email, name, picture } = userRes.data;
 
   let user = await User.findOne({ email });
 
