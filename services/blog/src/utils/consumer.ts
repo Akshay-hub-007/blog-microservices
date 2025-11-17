@@ -8,13 +8,15 @@ interface CacheInvalidationMessage {
 }
 export const startCacheConsumer = async () => {
   try {
-    const connection = await amqp.connect({
-      protocol: "amqp",
-      hostname: 'localhost',
-      port: 5672,
-      username: "admin",
-      password: "admin123",
-    });
+    // const connection = await amqp.connect({
+    //   protocol: "amqp",
+    //   hostname: 'localhost',
+    //   port: 5672,
+    //   username: "admin",
+    //   password: "admin123",
+    // });
+
+    const connection  = await amqp.connect(process.env.CLOUD_AMQP!)
 
     const channel = await connection.createChannel();
 

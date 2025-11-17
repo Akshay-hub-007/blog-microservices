@@ -5,13 +5,7 @@ let channel:amqp.Channel
 
 export const connectRabbitMq = async()=>{
     try {
-        const  connection =await amqp.connect({
-            protocol:"amqp",
-            hostname:"localhost",
-            port:5672,
-            username:"admin",
-            password:"admin123"
-        })
+        const  connection =await amqp.connect(process.env.CLOUD_AMQP!)
 
         channel = await connection.createChannel()
 
