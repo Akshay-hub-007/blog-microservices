@@ -3,26 +3,26 @@ import jwt from "jsonwebtoken";
 import TryCatch from "../utils/TryCatch.js";
 import type { AuthenticatedRequest } from "../middleware/isAuth.js";
 import getbuffer from "../middleware/datauri.js";
-import {v2 as cloudinary} from 'cloudinary'
+import { v2 as cloudinary } from 'cloudinary'
 import { oauthclient } from "../utils/GoogleConfig.js";
 import axios from "axios";
 
 export const loginUser = TryCatch(async (req, res) => {
-
   const { code } = req.body
-  
-  if(!code) {
+
+  if (!code) {
     res.status(400).json({
-      message:"Authroizatio code is required"
+      message: "Authroizatio code is required"
     })
   }
-
+  console.log(code)
   const googleRes = await oauthclient.getToken(code)
 
   oauthclient.setCredentials(googleRes.tokens)
-   
-  const userRes = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`)
 
+  const userRes = await axios.get(
+    `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
+  ); 
   const { email, name, picture } = userRes.data;
 
   let user = await User.findOne({ email });
@@ -69,63 +69,63 @@ export const getUserProfile = TryCatch(async (req, res) => {
 export const updateUser = TryCatch(async (req: AuthenticatedRequest, res) => {
 
   const { name, instagram, facebook, linkedin, bio } = req.body;
-  
+
   const user = await User.findByIdAndUpdate(req.user?._id, {
     name,
     instagram,
     facebook,
     linkedin,
     bio
-  },{new : true})
+  }, { new: true })
 
-  const token =  jwt.sign({user},process.env.JWT_SEC as string, {expiresIn:"5d"})
+  const token = jwt.sign({ user }, process.env.JWT_SEC as string, { expiresIn: "5d" })
 
 
-    return res.json({
-      message: "Updated Successfully",
-      user,
-      token
-    })
+  return res.json({
+    message: "Updated Successfully",
+    user,
+    token
+  })
 
 
 })
 
-export const uploadProfile = TryCatch(async(req:AuthenticatedRequest,res)=>{
+export const uploadProfile = TryCatch(async (req: AuthenticatedRequest, res) => {
   // console.log(first)
   const file = req.file
 
-  if(!file) {
+  if (!file) {
     res.status(400).json({
-      message:"No Image found"
+      message: "No Image found"
     })
     return;
   }
 
   const filebuffer = getbuffer(file)
 
-  if(!filebuffer || !filebuffer.content) {
+  if (!filebuffer || !filebuffer.content) {
 
     return res.status(400).json({
-      message:"Failed to generate buffer"
+      message: "Failed to generate buffer"
     })
   }
 
-  const cloud = await cloudinary.uploader.upload(filebuffer.content,{
-    folder:"blogs"
+  const cloud = await cloudinary.uploader.upload(filebuffer.content, {
+    folder: "blogs"
   })
 
-  const user =  await User.findByIdAndUpdate(req.user?._id,{
-    image:cloud.secure_url
-  },{new:true})
+  const user = await User.findByIdAndUpdate(req.user?._id, {
+    image: cloud.secure_url
+  }, { new: true })
 
-  const token = jwt.sign({user},process.env.JWT_SEC!,{
-    expiresIn:"5d"
+  const token = jwt.sign({ user }, process.env.JWT_SEC!, {
+    expiresIn: "5d"
   })
 
   res.json({
-    message:"User profile pic updated",
+    message: "User profile pic updated",
     token,
     user
   })
-   
+
 })
