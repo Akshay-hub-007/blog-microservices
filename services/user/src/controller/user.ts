@@ -15,7 +15,6 @@ export const loginUser = TryCatch(async (req, res) => {
       message: "Authroizatio code is required"
     })
   }
-  console.log(code)
   const googleRes = await oauthclient.getToken(code)
 
   oauthclient.setCredentials(googleRes.tokens)
