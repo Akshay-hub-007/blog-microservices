@@ -90,7 +90,6 @@ export const updateUser = TryCatch(async (req: AuthenticatedRequest, res) => {
 })
 
 export const uploadProfile = TryCatch(async (req: AuthenticatedRequest, res) => {
-  // console.log(first)
   const file = req.file
 
   if (!file) {
@@ -99,7 +98,6 @@ export const uploadProfile = TryCatch(async (req: AuthenticatedRequest, res) => 
     })
     return;
   }
-
   const filebuffer = getbuffer(file)
 
   if (!filebuffer || !filebuffer.content) {
@@ -108,15 +106,13 @@ export const uploadProfile = TryCatch(async (req: AuthenticatedRequest, res) => 
       message: "Failed to generate buffer"
     })
   }
-
   const cloud = await cloudinary.uploader.upload(filebuffer.content, {
     folder: "blogs"
   })
-
   const user = await User.findByIdAndUpdate(req.user?._id, {
     image: cloud.secure_url
   }, { new: true })
-
+  console.log(user)
   const token = jwt.sign({ user }, process.env.JWT_SEC!, {
     expiresIn: "5d"
   })
