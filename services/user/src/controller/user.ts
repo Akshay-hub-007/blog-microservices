@@ -9,7 +9,7 @@ import axios from "axios";
 
 export const loginUser = TryCatch(async (req, res) => {
   const { code } = req.body
-
+  console.log("object")
   if (!code) {
     res.status(400).json({
       message: "Authroizatio code is required"
@@ -18,7 +18,7 @@ export const loginUser = TryCatch(async (req, res) => {
   const googleRes = await oauthclient.getToken(code)
 
   oauthclient.setCredentials(googleRes.tokens)
-
+  
   const userRes = await axios.get(
     `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
   ); 
