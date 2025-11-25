@@ -1,7 +1,8 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
+import type { AuthenticatedRequest } from "../middleware/isAuth.js";
 
 const TryCatch = (handler: RequestHandler): RequestHandler => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       await handler(req, res, next);
     } catch (error: any) {

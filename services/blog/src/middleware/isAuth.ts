@@ -12,10 +12,10 @@ export interface IUser extends Document {
     bio: string;
 }
 export interface AuthenticatedRequest extends Request {
-    user: IUser
+  user?: IUser | null;
 }
 const isAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-
+    console.log("object")
     try {
         const authHeader = req.headers.authorization
 
@@ -49,3 +49,5 @@ const isAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction) =>
 
 
 }
+
+export default isAuth

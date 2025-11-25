@@ -77,3 +77,42 @@ export const getSingleBlog = TryCatch(async (req, res) => {
   console.log("Serving from db")
   res.json({ blog: blog[0], author: data })
 })
+
+export const addComment = TryCatch(async (req: AuthenticatedRequest, res) => {
+  const { id: blogid } = req.params;
+  const { comment } = req.body;
+
+  await sql`INSERT INTO comments (comment, blogid, userid, username) VALUES (${comment}, ${blogid}, ${req.user?._id}, ${req.user?.name}) RETURNING *`;
+
+  res.json({
+    message: "Comment Added",
+  });
+});
+export const getAllComments = TryCatch(async (req: AuthenticatedRequest, res) => {
+  const { id } = req.params
+  console.log("object")
+  const blogs = await sql`
+    SELECT * FROM comments WHERE blogid = ${id} ORDER BY created_at DESC
+   `;
+
+  res.json(blogs)
+})
+
+export const deleteComment = TryCatch(async (req: AuthenticatedRequest, res) => {
+  const { commentid } = req.params
+
+  const comment = await sql`SELECT * FROM comments WHERE commentid = ${commentid}`
+
+  if (comment[0]?.userid != req.user?._id) {
+    res.status(401).json({
+      message: "Your are not owner of the blog"
+    })
+    return;
+  }
+
+  await sql`DELETE comments WHERE id = ${commentid}`
+
+  res.json({
+    message: "Comment Deleted"
+  })
+})
