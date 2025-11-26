@@ -55,6 +55,7 @@ export const getAllBlogs = TryCatch(async (req, res) => {
 });
 
 export const getSingleBlog = TryCatch(async (req, res) => {
+  console.log("getting single blog")
   const blogid = req.params.id
   const cacheKey = `blogid:${blogid}`
   const cache = await redisClient.get(cacheKey);
@@ -63,7 +64,6 @@ export const getSingleBlog = TryCatch(async (req, res) => {
     res.json(JSON.parse(cache));
     return;
   }
-
   const blog = await sql`SELECT * FROM blogs WHERE id = ${req.params.id}`;
   if (!blog.length) {
     return res.status(404).json({
@@ -99,10 +99,10 @@ export const getAllComments = TryCatch(async (req: AuthenticatedRequest, res) =>
 })
 
 export const deleteComment = TryCatch(async (req: AuthenticatedRequest, res) => {
-  const { commentid } = req.params
-
-  const comment = await sql`SELECT * FROM comments WHERE commentid = ${commentid}`
-
+  const { id } = req.params
+  console.log(id)
+  const comment = await sql`SELECT * FROM comments WHERE id = ${id}`
+  console.log(req.user?._id)
   if (comment[0]?.userid != req.user?._id) {
     res.status(401).json({
       message: "Your are not owner of the blog"
@@ -110,9 +110,49 @@ export const deleteComment = TryCatch(async (req: AuthenticatedRequest, res) => 
     return;
   }
 
-  await sql`DELETE comments WHERE id = ${commentid}`
+  await sql`DELETE FROM comments WHERE id = ${id}`
 
   res.json({
     message: "Comment Deleted"
   })
 })
+
+export const saveBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
+
+  const { blogid } = req.params;
+  const userid = req.user?._id;
+  console.log(blogid+" "+ userid)
+  if (!blogid || !userid) {
+    res.status(400).json({
+      message: "User id or blog id is missing"
+    })
+    return;
+  }
+
+  const existing =
+    await sql`SELECT * FROM savedblogs WHERE userid = ${userid} AND blogid = ${blogid}`;
+
+  if (existing.length === 0) {
+    await sql`INSERT INTO savedblogs (blogid, userid) VALUES (${blogid}, ${userid})`;
+
+    res.json({
+      message: "Blog Saved",
+    });
+    return;
+  } else {
+    await sql`DELETE FROM savedblogs WHERE userid = ${userid} AND blogid = ${blogid}`;
+
+    res.json({
+      message: "Blog Unsaved",
+    });
+    return;
+  }
+
+})
+
+export const getSavedBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
+  const blogs =
+    await sql`SELECT * FROM savedblogs WHERE userid = ${req.user?._id}`;
+
+  res.json(blogs);
+});

@@ -11,5 +11,5 @@ router.delete("/blog/:id",isAuth,deleteBlog)
 router.post("/ai/title",aiTitleResponse)
 router.post("/ai/description",aiDescriptionResponse)
 router.post("/ai/blog",aiBlogResponse)
-
+// router.post("/save")
 export default router 

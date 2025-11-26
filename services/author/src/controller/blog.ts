@@ -129,6 +129,7 @@ export const deleteBlog = TryCatch(async (req: AuthenticatedRequest, res) => {
   }
   if (blog[0]?.author != req.user?._id) {
 
+    await invalidateCacheJob(["blogs:*"])
     return res.status(401).json({
       message: " Your are not the authot of the blog."
     })
